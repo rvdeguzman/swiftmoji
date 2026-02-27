@@ -34,6 +34,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var clickMonitor: Any?
     private var emojiSearcher: EmojiSearcher?
     private let searchState = SearchState()
+    private let comboFormState = ComboFormState()
     private var pickHistory: PickHistory?
     private var comboStore: ComboStore?
 
@@ -95,6 +96,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel = panel, let screen = NSScreen.main else { return }
 
+        panel.interceptsTab = true
         searchState.reset()
 
         let hostingView = NSHostingView(rootView: SearchView(
@@ -167,8 +169,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showComboForm() {
         guard let panel = panel else { return }
+        panel.interceptsTab = false
+
+        // Rewire arrow keys to combo form's emoji selection
+        panel.onArrowUp = { [weak self] in
+            self?.comboFormState.moveUp()
+        }
+        panel.onArrowDown = { [weak self] in
+            self?.comboFormState.moveDown()
+        }
+
+        comboFormState.reset()
 
         let hostingView = NSHostingView(rootView: ComboFormView(
+            formState: comboFormState,
+            searcher: emojiSearcher!,
             onSave: { [weak self] names, characters in
                 self?.comboStore?.add(names: names, characters: characters)
                 self?.comboStore?.save()

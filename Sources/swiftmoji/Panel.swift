@@ -6,6 +6,7 @@ class FloatingPanel: NSPanel {
     nonisolated(unsafe) var onArrowDown: (() -> Void)?
     nonisolated(unsafe) var onCreateCombo: (() -> Void)?
     nonisolated(unsafe) var onDeleteCombo: (() -> Void)?
+    nonisolated(unsafe) var interceptsTab: Bool = true
 
     init(contentRect: NSRect) {
         super.init(
@@ -49,7 +50,7 @@ class FloatingPanel: NSPanel {
             case 125:
                 onArrowDown?()
                 return
-            case 48: // Tab
+            case 48 where interceptsTab: // Tab
                 if flags.contains(.shift) {
                     onArrowUp?()
                 } else {
