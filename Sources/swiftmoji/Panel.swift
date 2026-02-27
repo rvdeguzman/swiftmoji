@@ -4,6 +4,8 @@ class FloatingPanel: NSPanel {
     nonisolated(unsafe) var onDismiss: (() -> Void)?
     nonisolated(unsafe) var onArrowUp: (() -> Void)?
     nonisolated(unsafe) var onArrowDown: (() -> Void)?
+    nonisolated(unsafe) var onCreateCombo: (() -> Void)?
+    nonisolated(unsafe) var onDeleteCombo: (() -> Void)?
 
     init(contentRect: NSRect) {
         super.init(
@@ -53,6 +55,16 @@ class FloatingPanel: NSPanel {
                     onArrowDown?()
                 }
                 return
+            case 45: // 'n'
+                if event.modifierFlags.contains(.command) {
+                    onCreateCombo?()
+                    return
+                }
+            case 51: // Delete/Backspace
+                if event.modifierFlags.contains(.command) {
+                    onDeleteCombo?()
+                    return
+                }
             default:
                 break
             }

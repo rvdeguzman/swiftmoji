@@ -11,6 +11,7 @@ struct SearchView: View {
     let pickHistory: PickHistory
     var onSelect: (Emoji, String) -> Void
     var onDismiss: () -> Void
+    var onDeleteCombo: ((Emoji) -> Void)?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -83,6 +84,15 @@ struct SearchView: View {
         .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12))
         .onExitCommand {
             onDismiss()
+        }
+        .onChange(of: searchState.deleteRequested) { requested in
+            if requested {
+                searchState.deleteRequested = false
+                let index = searchState.selectedIndex
+                if index < results.count {
+                    onDeleteCombo?(results[index])
+                }
+            }
         }
         .onAppear {
             isSearchFocused = true

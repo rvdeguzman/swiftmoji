@@ -35,18 +35,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var emojiSearcher: EmojiSearcher?
     private let searchState = SearchState()
     private var pickHistory: PickHistory?
+    private var comboStore: ComboStore?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("Swiftmoji running")
         let emojis = EmojiDataParser.loadAll()
         print("Loaded \(emojis.count) emojis")
-        emojiSearcher = EmojiSearcher(emojis: emojis)
-
         let historyURL = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Swiftmoji", isDirectory: true)
         try? FileManager.default.createDirectory(at: historyURL, withIntermediateDirectories: true)
         pickHistory = PickHistory(storageURL: historyURL.appendingPathComponent("pick-history.json"))
+
+        comboStore = ComboStore(storageURL: historyURL.appendingPathComponent("combos.json"))
+        emojiSearcher = EmojiSearcher(emojis: emojis, comboStore: comboStore)
 
         hotkeyManager = HotkeyManager(onHotkey: { [weak self] in
             self?.togglePanel()
@@ -82,6 +84,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             panel.onArrowDown = { [weak self] in
                 self?.searchState.moveDown(resultCount: 50)
             }
+            panel.onCreateCombo = { [weak self] in
+                self?.showComboForm()
+            }
+            panel.onDeleteCombo = { [weak self] in
+                self?.searchState.deleteRequested = true
+            }
             self.panel = panel
         }
 
@@ -101,6 +109,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             },
             onDismiss: { [weak self] in
                 self?.hidePanel()
+            },
+            onDeleteCombo: { [weak self] emoji in
+                guard let self, let comboStore = self.comboStore else { return }
+                if comboStore.isCombo(character: emoji.character) {
+                    comboStore.delete(character: emoji.character)
+                    comboStore.save()
+                }
             }
         ))
 
@@ -147,6 +162,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             keyUp?.flags = .maskCommand
             keyDown?.post(tap: .cghidEventTap)
             keyUp?.post(tap: .cghidEventTap)
+        }
+    }
+
+    func showComboForm() {
+        guard let panel = panel else { return }
+
+        let hostingView = NSHostingView(rootView: ComboFormView(
+            onSave: { [weak self] names, characters in
+                self?.comboStore?.add(names: names, characters: characters)
+                self?.comboStore?.save()
+                self?.showPanel()
+            },
+            onCancel: { [weak self] in
+                self?.showPanel()
+            }
+        ))
+
+        panel.contentView = hostingView
+        let fittingSize = hostingView.fittingSize
+        var frame = panel.frame
+        frame.size = fittingSize
+        frame.origin.y += panel.frame.height - fittingSize.height
+        panel.setFrame(frame, display: true)
+
+        DispatchQueue.main.async {
+            if let textField = panel.contentView?.findFirstTextField() {
+                panel.makeFirstResponder(textField)
+            }
         }
     }
 

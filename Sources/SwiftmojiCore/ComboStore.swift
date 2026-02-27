@@ -28,6 +28,10 @@ public class ComboStore: @unchecked Sendable {
         combos.removeAll { $0.id == id }
     }
 
+    public func delete(character: String) {
+        combos.removeAll { $0.characters == character }
+    }
+
     public func all() -> [Combo] {
         combos
     }
