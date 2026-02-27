@@ -32,9 +32,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
     private var hotkeyManager: HotkeyManager?
     private var clickMonitor: Any?
+    private var emojiSearcher: EmojiSearcher?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("Swiftmoji running")
+        emojiSearcher = EmojiSearcher(emojis: EmojiDataParser.loadAll())
 
         hotkeyManager = HotkeyManager(onHotkey: { [weak self] in
             self?.togglePanel()
@@ -59,7 +61,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func showPanel() {
         if panel == nil {
             let panelWidth: CGFloat = 500
-            let panelHeight: CGFloat = 44
+            let panelHeight: CGFloat = 340
             let panel = FloatingPanel(contentRect: NSRect(
                 x: 0, y: 0, width: panelWidth, height: panelHeight
             ))
@@ -71,10 +73,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel = panel, let screen = NSScreen.main else { return }
 
-        let hostingView = NSHostingView(rootView: SearchView(onDismiss: { [weak self] in
-            self?.hidePanel()
-        }))
-        hostingView.frame = NSRect(x: 0, y: 0, width: 500, height: 44)
+        let hostingView = NSHostingView(rootView: SearchView(
+            searcher: emojiSearcher!,
+            onSelect: { [weak self] emoji in
+                print("Selected: \(emoji.character) \(emoji.name)")
+                self?.hidePanel()
+            },
+            onDismiss: { [weak self] in
+                self?.hidePanel()
+            }
+        ))
+        hostingView.frame = NSRect(x: 0, y: 0, width: 500, height: 340)
         panel.contentView = hostingView
 
         // Center horizontally, upper third of screen
