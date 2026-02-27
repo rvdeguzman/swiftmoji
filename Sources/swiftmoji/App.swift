@@ -40,6 +40,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard let panel = panel, let screen = NSScreen.main else { return }
 
+        let hostingView = NSHostingView(rootView: SearchView(onDismiss: { [weak self] in
+            self?.hidePanel()
+        }))
+        hostingView.frame = NSRect(x: 0, y: 0, width: 500, height: 44)
+        panel.contentView = hostingView
+
         // Center horizontally, upper third of screen
         let screenFrame = screen.visibleFrame
         let x = screenFrame.midX - panel.frame.width / 2
