@@ -68,4 +68,28 @@ struct EmojiSearcherTests {
         let results = searcher.search(query: "a")
         #expect(results.count <= 50)
     }
+
+    @Test func searchIncludesCombos() {
+        let emojis = [
+            Emoji(character: "🤓", name: "nerd face"),
+        ]
+        let store = ComboStore()
+        store.add(names: ["ackshuwally", "nerd"], characters: "☝️🤓")
+
+        let searcher = EmojiSearcher(emojis: emojis, comboStore: store)
+        let results = searcher.search(query: "ackshuwally")
+
+        #expect(results.contains { $0.character == "☝️🤓" })
+    }
+
+    @Test func comboMatchesByAlias() {
+        let searcher = EmojiSearcher(emojis: [], comboStore: {
+            let s = ComboStore()
+            s.add(names: ["ackshuwally", "nerd"], characters: "☝️🤓")
+            return s
+        }())
+        let results = searcher.search(query: "nerd")
+
+        #expect(results.contains { $0.character == "☝️🤓" })
+    }
 }

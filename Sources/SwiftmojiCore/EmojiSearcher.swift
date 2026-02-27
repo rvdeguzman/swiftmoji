@@ -1,17 +1,22 @@
 public class EmojiSearcher: @unchecked Sendable {
     private let emojis: [Emoji]
+    private let comboStore: ComboStore?
     private static let maxResults = 50
 
-    public init(emojis: [Emoji]) {
+    public init(emojis: [Emoji], comboStore: ComboStore? = nil) {
         self.emojis = emojis
+        self.comboStore = comboStore
     }
 
     public func search(query: String, pickHistory: PickHistory? = nil) -> [Emoji] {
         guard !query.isEmpty else { return [] }
 
+        let comboEmojis = comboStore?.toEmojis() ?? []
+        let allEmojis = emojis + comboEmojis
+
         var scored: [(emoji: Emoji, score: Int)] = []
 
-        for emoji in emojis {
+        for emoji in allEmojis {
             var bestScore = 0
 
             if let nameScore = FuzzyMatcher.score(query: query, against: emoji.name) {
