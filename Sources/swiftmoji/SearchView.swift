@@ -91,6 +91,11 @@ struct SearchView: View {
                 let index = searchState.selectedIndex
                 if index < results.count {
                     onDeleteCombo?(results[index])
+                    // Refresh results after deletion
+                    results = searcher.search(query: query, pickHistory: pickHistory)
+                    if searchState.selectedIndex >= results.count {
+                        searchState.selectedIndex = max(0, results.count - 1)
+                    }
                 }
             }
         }

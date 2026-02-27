@@ -38,6 +38,7 @@ class FloatingPanel: NSPanel {
     // move the text cursor instead of navigating the results list).
     override func sendEvent(_ event: NSEvent) {
         if event.type == .keyDown {
+            let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             switch event.keyCode {
             case 53:
                 onDismiss?()
@@ -49,22 +50,18 @@ class FloatingPanel: NSPanel {
                 onArrowDown?()
                 return
             case 48: // Tab
-                if event.modifierFlags.contains(.shift) {
+                if flags.contains(.shift) {
                     onArrowUp?()
                 } else {
                     onArrowDown?()
                 }
                 return
-            case 45: // 'n'
-                if event.modifierFlags.contains(.command) {
-                    onCreateCombo?()
-                    return
-                }
-            case 51: // Delete/Backspace
-                if event.modifierFlags.contains(.command) {
-                    onDeleteCombo?()
-                    return
-                }
+            case 45 where flags.contains(.command): // Cmd+N
+                onCreateCombo?()
+                return
+            case 51 where flags.contains(.command): // Cmd+Backspace
+                onDeleteCombo?()
+                return
             default:
                 break
             }
