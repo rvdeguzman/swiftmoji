@@ -33,10 +33,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeyManager: HotkeyManager?
     private var clickMonitor: Any?
     private var emojiSearcher: EmojiSearcher?
+    private let searchState = SearchState()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("Swiftmoji running")
-        emojiSearcher = EmojiSearcher(emojis: EmojiDataParser.loadAll())
+        let emojis = EmojiDataParser.loadAll()
+        print("Loaded \(emojis.count) emojis")
+        emojiSearcher = EmojiSearcher(emojis: emojis)
 
         hotkeyManager = HotkeyManager(onHotkey: { [weak self] in
             self?.togglePanel()
@@ -60,20 +63,27 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func showPanel() {
         if panel == nil {
-            let panelWidth: CGFloat = 500
-            let panelHeight: CGFloat = 340
             let panel = FloatingPanel(contentRect: NSRect(
-                x: 0, y: 0, width: panelWidth, height: panelHeight
+                x: 0, y: 0, width: 500, height: 44
             ))
             panel.onDismiss = { [weak self] in
                 self?.hidePanel()
+            }
+            panel.onArrowUp = { [weak self] in
+                self?.searchState.moveUp(resultCount: 50)
+            }
+            panel.onArrowDown = { [weak self] in
+                self?.searchState.moveDown(resultCount: 50)
             }
             self.panel = panel
         }
 
         guard let panel = panel, let screen = NSScreen.main else { return }
 
+        searchState.reset()
+
         let hostingView = NSHostingView(rootView: SearchView(
+            searchState: searchState,
             searcher: emojiSearcher!,
             onSelect: { [weak self] emoji in
                 print("Selected: \(emoji.character) \(emoji.name)")
@@ -83,19 +93,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.hidePanel()
             }
         ))
-        hostingView.frame = NSRect(x: 0, y: 0, width: 500, height: 340)
+
+        // Let the hosting view size itself to fit SwiftUI content
         panel.contentView = hostingView
 
-        // Center horizontally, upper third of screen
+        // Position: center horizontally, upper third of screen
+        // Anchor from the TOP so the panel grows downward when results appear
         let screenFrame = screen.visibleFrame
-        let x = screenFrame.midX - panel.frame.width / 2
-        let y = screenFrame.maxY - screenFrame.height / 3
-        panel.setFrameOrigin(NSPoint(x: x, y: y))
+        let topY = screenFrame.maxY - screenFrame.height / 4
+        let fittingSize = hostingView.fittingSize
+        let x = screenFrame.midX - fittingSize.width / 2
+        let y = topY - fittingSize.height
+        panel.setFrame(NSRect(x: x, y: y, width: fittingSize.width, height: fittingSize.height), display: true)
 
         panel.makeKeyAndOrderFront(nil)
 
-        // Force focus into the search field — @FocusState alone can be
-        // unreliable inside a non-activating NSPanel.
+        // Force focus into the search field
         DispatchQueue.main.async {
             if let textField = panel.contentView?.findFirstTextField() {
                 panel.makeFirstResponder(textField)

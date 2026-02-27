@@ -2,6 +2,8 @@ import AppKit
 
 class FloatingPanel: NSPanel {
     nonisolated(unsafe) var onDismiss: (() -> Void)?
+    nonisolated(unsafe) var onArrowUp: (() -> Void)?
+    nonisolated(unsafe) var onArrowDown: (() -> Void)?
 
     init(contentRect: NSRect) {
         super.init(
@@ -29,11 +31,32 @@ class FloatingPanel: NSPanel {
     // Required for the panel to accept key input
     override var canBecomeKey: Bool { true }
 
-    override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 { // Escape key
-            onDismiss?()
-        } else {
-            super.keyDown(with: event)
+    // Intercept key events BEFORE the responder chain dispatches them.
+    // This prevents arrow keys from reaching the NSTextField (which would
+    // move the text cursor instead of navigating the results list).
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown {
+            switch event.keyCode {
+            case 53:
+                onDismiss?()
+                return
+            case 126:
+                onArrowUp?()
+                return
+            case 125:
+                onArrowDown?()
+                return
+            case 48: // Tab
+                if event.modifierFlags.contains(.shift) {
+                    onArrowUp?()
+                } else {
+                    onArrowDown?()
+                }
+                return
+            default:
+                break
+            }
         }
+        super.sendEvent(event)
     }
 }

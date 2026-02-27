@@ -5,6 +5,7 @@ struct SearchView: View {
     @State private var query: String = ""
     @State private var results: [Emoji] = []
     @FocusState private var isSearchFocused: Bool
+    @ObservedObject var searchState: SearchState
 
     let searcher: EmojiSearcher
     var onSelect: (Emoji) -> Void
@@ -24,10 +25,12 @@ struct SearchView: View {
                     .focused($isSearchFocused)
                     .onChange(of: query) { newValue in
                         results = searcher.search(query: newValue)
+                        searchState.reset()
                     }
                     .onSubmit {
-                        if let first = results.first {
-                            onSelect(first)
+                        let index = searchState.selectedIndex
+                        if index < results.count {
+                            onSelect(results[index])
                         }
                     }
             }
@@ -38,30 +41,44 @@ struct SearchView: View {
             if !results.isEmpty {
                 Divider()
 
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(Array(results.enumerated()), id: \.offset) { _, emoji in
-                            HStack(spacing: 12) {
-                                Text(emoji.character)
-                                    .font(.system(size: 24))
-                                Text(emoji.name)
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(.primary)
-                            }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                onSelect(emoji)
+                ScrollViewReader { proxy in
+                    ScrollView {
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(Array(results.enumerated()), id: \.offset) { index, emoji in
+                                HStack(spacing: 12) {
+                                    Text(emoji.character)
+                                        .font(.system(size: 24))
+                                    Text(emoji.name)
+                                        .font(.system(size: 14))
+                                        .foregroundStyle(.primary)
+                                }
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 6)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    index == searchState.selectedIndex
+                                        ? Color.white.opacity(0.1)
+                                        : Color.clear
+                                )
+                                .contentShape(Rectangle())
+                                .id(index)
+                                .onTapGesture {
+                                    onSelect(emoji)
+                                }
                             }
                         }
                     }
+                    .frame(height: 280)
+                    .onChange(of: searchState.selectedIndex) { newIndex in
+                        withAnimation {
+                            proxy.scrollTo(newIndex, anchor: nil)
+                        }
+                    }
                 }
-                .frame(maxHeight: 280)
             }
         }
         .frame(width: 500)
+        .fixedSize(horizontal: false, vertical: true)
         .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12))
         .onExitCommand {
             onDismiss()
