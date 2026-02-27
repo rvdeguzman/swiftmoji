@@ -8,7 +8,8 @@ struct SearchView: View {
     @ObservedObject var searchState: SearchState
 
     let searcher: EmojiSearcher
-    var onSelect: (Emoji) -> Void
+    let pickHistory: PickHistory
+    var onSelect: (Emoji, String) -> Void
     var onDismiss: () -> Void
 
     var body: some View {
@@ -24,13 +25,13 @@ struct SearchView: View {
                     .font(.system(size: 20))
                     .focused($isSearchFocused)
                     .onChange(of: query) { newValue in
-                        results = searcher.search(query: newValue)
+                        results = searcher.search(query: newValue, pickHistory: pickHistory)
                         searchState.reset()
                     }
                     .onSubmit {
                         let index = searchState.selectedIndex
                         if index < results.count {
-                            onSelect(results[index])
+                            onSelect(results[index], query)
                         }
                     }
             }
@@ -63,7 +64,7 @@ struct SearchView: View {
                                 .contentShape(Rectangle())
                                 .id(index)
                                 .onTapGesture {
-                                    onSelect(emoji)
+                                    onSelect(emoji, query)
                                 }
                             }
                         }

@@ -6,7 +6,7 @@ public class EmojiSearcher: @unchecked Sendable {
         self.emojis = emojis
     }
 
-    public func search(query: String) -> [Emoji] {
+    public func search(query: String, pickHistory: PickHistory? = nil) -> [Emoji] {
         guard !query.isEmpty else { return [] }
 
         var scored: [(emoji: Emoji, score: Int)] = []
@@ -26,6 +26,10 @@ public class EmojiSearcher: @unchecked Sendable {
             }
 
             if bestScore > 0 {
+                if let history = pickHistory {
+                    let picks = history.pickCount(query: query, emojiCharacter: emoji.character)
+                    bestScore += picks * 50
+                }
                 scored.append((emoji, bestScore))
             }
         }
