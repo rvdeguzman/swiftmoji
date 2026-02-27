@@ -15,9 +15,21 @@ struct SwiftmojiApp {
 @MainActor
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
+    private var hotkeyManager: HotkeyManager?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("Swiftmoji running")
+
+        hotkeyManager = HotkeyManager(onHotkey: { [weak self] in
+            self?.togglePanel()
+        })
+
+        if !hotkeyManager!.start() {
+            // Prompt for accessibility permissions
+            let options = ["AXTrustedCheckOptionPrompt" as CFString: true] as CFDictionary
+            AXIsProcessTrustedWithOptions(options)
+            print("Please grant Accessibility access and restart Swiftmoji.")
+        }
     }
 
     func togglePanel() {
