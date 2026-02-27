@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import SwiftmojiCore
 
 @main
 struct SwiftmojiApp {
@@ -9,6 +10,20 @@ struct SwiftmojiApp {
         let delegate = AppDelegate()
         app.delegate = delegate
         app.run()
+    }
+}
+
+extension NSView {
+    func findFirstTextField() -> NSTextField? {
+        if let textField = self as? NSTextField, textField.isEditable {
+            return textField
+        }
+        for subview in subviews {
+            if let found = subview.findFirstTextField() {
+                return found
+            }
+        }
+        return nil
     }
 }
 
@@ -69,6 +84,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.setFrameOrigin(NSPoint(x: x, y: y))
 
         panel.makeKeyAndOrderFront(nil)
+
+        // Force focus into the search field — @FocusState alone can be
+        // unreliable inside a non-activating NSPanel.
+        DispatchQueue.main.async {
+            if let textField = panel.contentView?.findFirstTextField() {
+                panel.makeFirstResponder(textField)
+            }
+        }
 
         // Dismiss on click outside
         clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in

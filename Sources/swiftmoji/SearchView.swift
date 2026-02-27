@@ -1,7 +1,9 @@
 import SwiftUI
+import SwiftmojiCore
 
 struct SearchView: View {
     @State private var query: String = ""
+    @FocusState private var isSearchFocused: Bool
     var onDismiss: () -> Void
 
     var body: some View {
@@ -14,6 +16,7 @@ struct SearchView: View {
                 TextField("Search emoji...", text: $query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 20))
+                    .focused($isSearchFocused)
                     .onSubmit {
                         // Will handle emoji selection later
                     }
@@ -25,6 +28,9 @@ struct SearchView: View {
         .background(.ultraThickMaterial, in: RoundedRectangle(cornerRadius: 12))
         .onExitCommand {
             onDismiss()
+        }
+        .onAppear {
+            isSearchFocused = true
         }
     }
 }
