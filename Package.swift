@@ -7,7 +7,8 @@ let package = Package(
     platforms: [.macOS(.v13)],
     targets: [
         .target(
-            name: "SwiftmojiCore"
+            name: "SwiftmojiCore",
+            resources: [.copy("Resources/emoji-test.txt")]
         ),
         .executableTarget(
             name: "swiftmoji",
