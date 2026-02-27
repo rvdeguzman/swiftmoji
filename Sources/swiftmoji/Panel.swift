@@ -1,6 +1,8 @@
 import AppKit
 
 class FloatingPanel: NSPanel {
+    nonisolated(unsafe) var onDismiss: (() -> Void)?
+
     init(contentRect: NSRect) {
         super.init(
             contentRect: contentRect,
@@ -26,4 +28,12 @@ class FloatingPanel: NSPanel {
 
     // Required for the panel to accept key input
     override var canBecomeKey: Bool { true }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // Escape key
+            onDismiss?()
+        } else {
+            super.keyDown(with: event)
+        }
+    }
 }

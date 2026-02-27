@@ -16,6 +16,7 @@ struct SwiftmojiApp {
 class AppDelegate: NSObject, NSApplicationDelegate {
     private var panel: FloatingPanel?
     private var hotkeyManager: HotkeyManager?
+    private var clickMonitor: Any?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("Swiftmoji running")
@@ -47,6 +48,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let panel = FloatingPanel(contentRect: NSRect(
                 x: 0, y: 0, width: panelWidth, height: panelHeight
             ))
+            panel.onDismiss = { [weak self] in
+                self?.hidePanel()
+            }
             self.panel = panel
         }
 
@@ -65,9 +69,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.setFrameOrigin(NSPoint(x: x, y: y))
 
         panel.makeKeyAndOrderFront(nil)
+
+        // Dismiss on click outside
+        clickMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.hidePanel()
+            }
+        }
     }
 
     func hidePanel() {
+        if let monitor = clickMonitor {
+            NSEvent.removeMonitor(monitor)
+            clickMonitor = nil
+        }
         panel?.orderOut(nil)
     }
 }
