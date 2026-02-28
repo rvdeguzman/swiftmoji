@@ -31,6 +31,8 @@ public enum KaomojiDataParser {
            let orderData = try? Data(contentsOf: orderURL),
            let keys = try? JSONDecoder().decode([String].self, from: orderData) {
             orderedKeys = keys
+        } else {
+            print("Failed to load kaomoji-ordered.json from bundle")
         }
 
         var result: [Emoji] = []
@@ -43,7 +45,9 @@ public enum KaomojiDataParser {
         }
 
         for key in lib.keys.sorted() where !seen.contains(key) {
-            result.append(lib[key]!)
+            if let emoji = lib[key] {
+                result.append(emoji)
+            }
         }
 
         return result
