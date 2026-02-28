@@ -17,6 +17,10 @@ let package = Package(
                 .copy("Resources/kaomoji-ordered.json"),
             ]
         ),
+        .executableTarget(
+            name: "swiftmoji",
+            dependencies: ["SwiftmojiCore"]
+        ),
         .testTarget(
             name: "swiftmojiTests",
             dependencies: ["SwiftmojiCore"]
