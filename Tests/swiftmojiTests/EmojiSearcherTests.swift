@@ -92,4 +92,36 @@ struct EmojiSearcherTests {
 
         #expect(results.contains { $0.character == "☝️🤓" })
     }
+
+    @Test func searchKaomojiByName() {
+        let kaomojis = [
+            Emoji(character: "ˁ(⦿ᴥ⦿)ˀ", name: "Bear", keywords: ["bear"]),
+            Emoji(character: "( ͡° ͜ʖ ͡°)", name: "Lenny Face", keywords: ["lenny", "face"]),
+        ]
+        let searcher = EmojiSearcher(emojis: testEmojis, kaomojis: kaomojis)
+        let results = searcher.searchKaomoji(query: "bear")
+
+        #expect(results.count == 1)
+        #expect(results[0].character == "ˁ(⦿ᴥ⦿)ˀ")
+    }
+
+    @Test func searchKaomojiByKeyword() {
+        let kaomojis = [
+            Emoji(character: "( ͡° ͜ʖ ͡°)", name: "Lenny Face", keywords: ["lenny", "face"]),
+        ]
+        let searcher = EmojiSearcher(emojis: testEmojis, kaomojis: kaomojis)
+        let results = searcher.searchKaomoji(query: "lenny")
+
+        #expect(results.count == 1)
+        #expect(results[0].character == "( ͡° ͜ʖ ͡°)")
+    }
+
+    @Test func searchKaomojiEmptyQueryReturnsEmpty() {
+        let kaomojis = [
+            Emoji(character: "ˁ(⦿ᴥ⦿)ˀ", name: "Bear", keywords: ["bear"]),
+        ]
+        let searcher = EmojiSearcher(emojis: testEmojis, kaomojis: kaomojis)
+        let results = searcher.searchKaomoji(query: "")
+        #expect(results.isEmpty)
+    }
 }

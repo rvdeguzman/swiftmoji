@@ -1,8 +1,14 @@
 import SwiftUI
 
+enum SearchMode {
+    case emoji
+    case kaomoji
+}
+
 class SearchState: ObservableObject {
     @Published var selectedIndex: Int = 0
     @Published var deleteRequested: Bool = false
+    @Published var mode: SearchMode = .emoji
 
     func moveUp(resultCount: Int) {
         guard resultCount > 0 else { return }
@@ -14,7 +20,13 @@ class SearchState: ObservableObject {
         selectedIndex = selectedIndex >= resultCount - 1 ? 0 : selectedIndex + 1
     }
 
+    func toggleMode() {
+        mode = mode == .emoji ? .kaomoji : .emoji
+        selectedIndex = 0
+    }
+
     func reset() {
         selectedIndex = 0
+        mode = .emoji
     }
 }

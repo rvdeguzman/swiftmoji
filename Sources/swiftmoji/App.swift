@@ -42,6 +42,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         print("Swiftmoji running")
         let emojis = EmojiDataParser.loadAll()
         print("Loaded \(emojis.count) emojis")
+        let kaomojis = KaomojiDataParser.loadAll()
+        print("Loaded \(kaomojis.count) kaomojis")
         let historyURL = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Swiftmoji", isDirectory: true)
@@ -49,7 +51,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         pickHistory = PickHistory(storageURL: historyURL.appendingPathComponent("pick-history.json"))
 
         comboStore = ComboStore(storageURL: historyURL.appendingPathComponent("combos.json"))
-        emojiSearcher = EmojiSearcher(emojis: emojis, comboStore: comboStore)
+        emojiSearcher = EmojiSearcher(emojis: emojis, kaomojis: kaomojis, comboStore: comboStore)
 
         hotkeyManager = HotkeyManager(onHotkey: { [weak self] in
             self?.togglePanel()
@@ -90,6 +92,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             panel.onDeleteCombo = { [weak self] in
                 self?.searchState.deleteRequested = true
+            }
+            panel.onTabPressed = { [weak self] in
+                self?.searchState.toggleMode()
             }
             self.panel = panel
         }
