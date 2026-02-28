@@ -11,7 +11,11 @@ let package = Package(
     targets: [
         .target(
             name: "SwiftmojiCore",
-            resources: [.copy("Resources/emoji-test.txt")]
+            resources: [
+                .copy("Resources/emoji-test.txt"),
+                .copy("Resources/kaomoji-lib.json"),
+                .copy("Resources/kaomoji-ordered.json"),
+            ]
         ),
         .testTarget(
             name: "swiftmojiTests",
